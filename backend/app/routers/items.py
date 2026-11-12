@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import Literal
 from sqlalchemy.orm import Session
 
 from .. import crud, schemas
@@ -15,11 +16,11 @@ def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
 
 @router.get("", response_model=list[schemas.ItemResponse])
 def list_items(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=100),
     search: str = "",
-    sort_by: str = "title",
-    sort_order: str = "asc",
+    sort_by: Literal["title", "created_at"] = "title",
+    sort_order: Literal["asc", "desc"] = "asc",
     db: Session = Depends(get_db)
 ):
     return crud.get_items(

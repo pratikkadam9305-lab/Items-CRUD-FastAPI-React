@@ -1,4 +1,4 @@
-
+import pytest
 # 1. Test item creation
 
 def test_create_item(client):
@@ -135,4 +135,45 @@ def test_get_nonexistent_item(client):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Item not found"
+
+
+# 8. Test invalid query parameters
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"skip": -1},
+        {"limit": 0},
+        {"limit": 101},
+        {"sort_by": "price"},
+        {"sort_order": "random"},
+    ]
+)
+def test_invalid_query_parameters(client, params):
+
+    response = client.get("/api/items", params=params)
+
+    assert response.status_code == 422
+
+
+# 9. Test valid query parameters
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"skip": 0},
+        {"skip": 10},
+        {"limit": 1},
+        {"limit": 100},
+        {"sort_by": "title"},
+        {"sort_by": "created_at"},
+        {"sort_order": "asc"},
+        {"sort_order": "desc"},
+    ]
+)
+def test_valid_query_parameters(client, params):
+
+    response = client.get("/api/items", params=params)
+
+    assert response.status_code == 200
 

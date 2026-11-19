@@ -9,6 +9,22 @@ async function handleResponse(response) {
   return response.json()
 }
 
+async function request(url, options) {
+  try {
+    const response = await fetch(url, options)
+    return await handleResponse(response)
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        'Unable to connect to the server. Please check whether the backend is running.'
+      )
+    }
+
+    throw error
+  }
+}
+
+
 
 export async function getItems(
   search = '',
@@ -24,37 +40,31 @@ export async function getItems(
   params.append('sort_by', sortBy)
   params.append('sort_order', sortOrder)
 
-  const response = await fetch(
-    `${API_BASE}?${params.toString()}`
-  )
-
-  return handleResponse(response)
+  return request(`${API_BASE}?${params.toString()}`)
 }
 
 export async function getItem(id) {
-  const response = await fetch(`${API_BASE}/${id}`)
-  return handleResponse(response)
+  return request(`${API_BASE}/${id}`)
 }
 
 export async function createItem(data) {
-  const response = await fetch(API_BASE, {
+  return request(API_BASE, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
-  return handleResponse(response)
 }
 
 export async function updateItem(id, data) {
-  const response = await fetch(`${API_BASE}/${id}`, {
+  return request(`${API_BASE}/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
-  return handleResponse(response)
 }
 
 export async function deleteItem(id) {
-  const response = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' })
-  return handleResponse(response)
+  return request(`${API_BASE}/${id}`, {
+    method: 'DELETE',
+  })
 }

@@ -1,3 +1,7 @@
+import json
+import logging
+
+
 import pytest
 # 1. Test item creation
 
@@ -176,4 +180,76 @@ def test_valid_query_parameters(client, params):
     response = client.get("/api/items", params=params)
 
     assert response.status_code == 200
+
+
+
+# 10. Test successful API request logging
+
+def test_successful_request_logging(client, caplog):
+
+    with caplog.at_level(logging.INFO, logger="api.request"):
+        response = client.get("/api/items")
+
+    assert response.status_code == 200
+
+    records = [
+        record for record in caplog.records
+        if record.name == "api.request"
+    ]
+
+    assert records
+
+    log_data = json.loads(records[-1].message)
+
+    assert log_data["method"] == "GET"
+    assert log_data["path"] == "/api/items"
+    assert log_data["status_code"] == 200
+    assert log_data["processing_time_ms"] >= 0
+    assert "timestamp" in log_data
+
+
+# 11. Test failed API request logging
+
+def test_failed_request_logging(client, caplog):
+
+    with caplog.at_level(logging.INFO, logger="api.request"):
+        response = client.get("/api/items/9999")
+
+    assert response.status_code == 404
+
+    records = [
+        record for record in caplog.records
+        if record.name == "api.request"
+    ]
+
+    assert records
+
+    log_data = json.loads(records[-1].message)
+
+    assert log_data["method"] == "GET"
+    assert log_data["path"] == "/api/items/9999"
+    assert log_data["status_code"] == 404
+
+
+# 12. Test sensitive query parameters are not logged
+
+def test_sensitive_data_not_logged(client, caplog):
+
+    with caplog.at_level(logging.INFO, logger="api.request"):
+        client.get("/api/items?token=secret123")
+
+    records = [
+        record for record in caplog.records
+        if record.name == "api.request"
+    ]
+
+    assert records
+
+    for record in records:
+        assert "secret123" not in record.message
+
+        log_data = json.loads(record.message)
+
+        assert log_data["path"] == "/api/items"
+        assert "token" not in log_data
 

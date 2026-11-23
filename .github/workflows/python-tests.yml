@@ -14,6 +14,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      DATABASE_URL: "sqlite://"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,4 +35,3 @@ jobs:
         run: |
           cd backend
           pytest -v
-

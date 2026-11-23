@@ -253,9 +253,9 @@ def test_sensitive_data_not_logged(client, caplog):
         assert log_data["path"] == "/api/items"
         assert "token" not in log_data
 
-
 def test_health(client):
 
     response = client.get("/health")
 
     assert response.status_code == 200
+    assert response.json() == {"status": "ok"}

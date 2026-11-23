@@ -1,3 +1,5 @@
+import os
+
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -7,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .database import Base, engine
 from .routers import items
+from . import models
 
 import logging
 import json
@@ -17,6 +20,9 @@ from datetime import datetime, timezone
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Items CRUD API", version="1.0.0")
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 logging.basicConfig(level=logging.INFO)
 
@@ -78,6 +84,13 @@ app.add_middleware(
 )
 
 app.include_router(items.router, prefix="/api")
+@app.get("/api/version")
+def get_version():
+    return {
+        "application": "Items CRUD API",
+        "version": os.getenv("APP_VERSION", "1.0.0"),
+        "environment": os.getenv("APP_ENV", "development")
+    }
 
 FRONTEND_DIST = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
 
